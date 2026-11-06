@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 
-df = pd.read_csv("battery_data.csv")
+df = pd.read_csv("data/battery_data.csv")
 arr = df.to_numpy()
 hours_arr = arr[:,0].astype(float)
 life_arr = arr[:,1].astype(float)
@@ -51,8 +51,8 @@ def lin_regression(x_i: np.ndarray, y_i: np.ndarray, alpha: float, cost, gradien
 
 w_final, b_final, costs, parameters = lin_regression(hours_arr, life_arr, 0.1, cost, gradient)
 data = {
-    "w": f"{w_final}",
-    "b": f"{b_final}"
+    "w": w_final,
+    "b": b_final
 }
 
 with open("model.json", "w") as file:
