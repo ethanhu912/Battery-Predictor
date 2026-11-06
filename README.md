@@ -31,7 +31,7 @@ To estimate the time left at battery level `p`: `minutes_left = p / |w|`. For ex
 ## Run it
 
 ```bash
-pip install numpy pandas matplotlib
+pip install -r requirements.txt
 python linear_regression.py
 ```
 
