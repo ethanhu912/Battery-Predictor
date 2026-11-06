@@ -1,10 +1,11 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import json
 
 df = pd.read_csv("battery_data.csv")
 arr = df.to_numpy()
-minutes_arr = arr[:,0].astype(float)
+hours_arr = arr[:,0].astype(float)
 life_arr = arr[:,1].astype(float)
 
 def cost(x_i: np.ndarray, y_i: np.ndarray, w: float, b: float) -> float:    
@@ -43,10 +44,16 @@ def lin_regression(x_i: np.ndarray, y_i: np.ndarray, alpha: float, cost, gradien
         curr_cost = cost(x_i, y_i, w, b)
         costs.append(curr_cost)
         parameters.append([w, b])
-        if iters % 30000 == 0:
+        if iters % 50 == 0:
             print(f"iter: {iters} w: {w} b: {b} cost: {curr_cost}")
         iters += 1            
     return w, b, costs, parameters
 
-w_final, b_final, costs, parameters = lin_regression(minutes_arr, life_arr, 0.000065, cost, gradient)
-print(w_final, b_final)
+w_final, b_final, costs, parameters = lin_regression(hours_arr, life_arr, 0.1, cost, gradient)
+data = {
+    "w": f"{w_final}",
+    "b": f"{b_final}"
+}
+
+with open("model.json", "w") as file:
+    json.dump(data, file)
