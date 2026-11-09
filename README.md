@@ -6,21 +6,25 @@ The repo includes a model trained on my laptop, plus a logger script, so you can
 
 ## How it works
 
-The model fits battery % as a linear function of hours elapsed:
+The model fits **battery % drained** (how far the battery has dropped since the session started) as a linear function of hours elapsed:
 
 ```
 f(x) = w·x + b
 ```
 
+Training on % drained rather than raw battery % means the model doesn't depend on what charge a session starts at. A model trained on raw battery % learns the starting charge as part of `b`, so it assumes every session starts where the training session did. When I tested that version on a session that started at 98%, every prediction came out about 1.4% too high.
+
 - **Cost:** mean squared error, `J(w,b) = (1/2m) Σ (f(xᵢ) − yᵢ)²`
 - **Gradients:** `∂J/∂w = (1/m) Σ (f(xᵢ) − yᵢ)·xᵢ` and `∂J/∂b = (1/m) Σ (f(xᵢ) − yᵢ)`
 - **Update:** `w` and `b` are updated together on every iteration using the full dataset, which makes it *batch* GD. Training stops when the cost changes by less than `1e-7`.
 
-`w` is the drain rate in % per hour (negative, since the battery goes down) and `b` is the starting battery %. To get the time left at battery level `p`, work out how long until the battery reaches 0%:
+`w` is the drain rate in % per hour (positive) and `b` is a small offset that should be close to 0. To get the time left at battery level `p`, work out how long it takes to drain the remaining `p`%:
 
 ```
-hours_left = −p / w
+hours_left = p / w
 ```
+
+`b` isn't needed for this, because time left only depends on how fast the battery drains.
 
 ## Files
 
@@ -41,7 +45,7 @@ pip install -r requirements.txt
 python predict.py
 ```
 
-`predict.py` asks for your current battery %, then prints how much time the model predicts you have left, next to your operating system's own estimate.
+`predict.py` reads your current battery % automatically, then prints how much time the model predicts you have left, next to your operating system's own estimate.
 
 > The included `model.json` is trained on **my** laptop. Drain rate depends on the battery, screen and how the laptop is used, so the prediction may be off for yours. To get accurate predictions, collect your own data and retrain (see below).
 
@@ -51,7 +55,7 @@ python predict.py
 
 ### 1. Get ready
 
-- **Charge to 100%, then unplug before starting the logger.** The model only covers draining, so the logger stops as soon as it detects the charger. If you start it while plugged in, it will exit immediately.
+- **Unplug before starting the logger.** The model only covers draining, so the logger stops as soon as it detects the charger. If you start it while plugged in, it will exit immediately. You don't need to start at 100%, because the model learns how much the battery has drained, not the battery % itself. Starting high still gives you a longer session, though, and more data.
 - **Stop your laptop from sleeping.** Logging pauses while the laptop is asleep, which leaves gaps in the data.
   - **Windows:** Settings → System → Power & battery → Screen and sleep → set "When on battery power, put my device to sleep after" to **Never**.
   - **macOS:** run the logger with `caffeinate -i` (see below), which keeps the Mac awake for as long as the script is running.
@@ -92,7 +96,7 @@ Press **Ctrl+C** when you're done, ideally once the battery is low (around 10–
 
 ## Train the model
 
-`linear_regression.py` trains on `data/battery_data.csv`. To train on your own session, copy it over that file:
+`linear_regression.py` trains on `data/battery_data.csv`. It works out % drained by subtracting each reading from the first one. To train on your own session, copy it over that file:
 
 ```bash
 cp data/session_2026-11-05-14-30.csv data/battery_data.csv
@@ -107,12 +111,12 @@ This overwrites `model.json` with your model, so `predict.py` will use your lapt
 
 Trained on TODO readings from my laptop, taken once a minute over TODO hours (100% → TODO%).
 
-| | w (%/hour) | b (%) |
+| | w (drain, %/hour) | b (offset, %) |
 |---|---|---|
 | My gradient descent | TODO | TODO |
 | `np.polyfit` (check) | TODO | TODO |
 
-So my laptop drains about **TODO% per hour**, and a full charge lasts about **TODO hours** (`100 / |w|`).
+So my laptop drains about **TODO% per hour**, and a full charge lasts about **TODO hours** (`100 / w`).
 
 ## Limitations
 

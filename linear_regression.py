@@ -1,5 +1,4 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
 import json
 
@@ -7,6 +6,7 @@ df = pd.read_csv("data/battery_data.csv")
 arr = df.to_numpy()
 hours_arr = arr[:,0].astype(float)
 life_arr = arr[:,1].astype(float)
+drained_arr = life_arr[0] - life_arr
 
 def cost(x_i: np.ndarray, y_i: np.ndarray, w: float, b: float) -> float:    
     f_wb = w * x_i + b
@@ -49,7 +49,11 @@ def lin_regression(x_i: np.ndarray, y_i: np.ndarray, alpha: float, cost, gradien
         iters += 1            
     return w, b, costs, parameters
 
-w_final, b_final, costs, parameters = lin_regression(hours_arr, life_arr, 0.1, cost, gradient)
+w_final, b_final, costs, parameters = lin_regression(hours_arr, drained_arr, 0.1, cost, gradient)
+
+print(f"w_final = {w_final}, b_final = {b_final}")
+print(np.polyfit(hours_arr, drained_arr, 1))
+
 data = {
     "w": w_final,
     "b": b_final

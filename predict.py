@@ -9,7 +9,7 @@ try:
         w = data["w"]
         b = data["b"]
 
-        hours = (-percent) / w
+        hours = percent / w
         decimal_hours = hours - int(hours)
         minutes = int(decimal_hours * 60)
 
