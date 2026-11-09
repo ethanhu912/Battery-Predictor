@@ -10,7 +10,7 @@ os.makedirs("data", exist_ok=True)
 filename = f"data/session_{datetime.now().strftime('%Y-%m-%d-%H-%M')}.csv"
 
 with open(filename, "w", newline="") as csvfile:
-    fieldnames = ["hours", "battery_pct"]
+    fieldnames = ["hours", "battery_pct", "secsLeft"]
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
     while True:
@@ -18,12 +18,12 @@ with open(filename, "w", newline="") as csvfile:
             current_battery = psutil.sensors_battery()
             current_percent = current_battery.percent
             current_time = time.time()
+            current_secsLeft = current_battery.secsleft
             if (current_battery.power_plugged):
                 break
             delta_hours = (current_time - initial_time) / 3600
-            writer.writerow({"hours": delta_hours, "battery_pct": current_percent})
+            writer.writerow({"hours": delta_hours, "battery_pct": current_percent, "secsLeft": current_secsLeft})
             csvfile.flush()
             time.sleep(60)
-
         except KeyboardInterrupt:
             break
